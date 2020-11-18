@@ -310,7 +310,6 @@ def reconstruct_path(prev, goal_vertex):
     @param goal_vertex: Map coordinates of the goal_vertex
     @return path: List of vertices where path[0] = source_vertex_ij_coords and path[-1] = goal_vertex_ij_coords
     """
- 
     path = [goal_vertex]
     i = goal_vertex[0]
     j = goal_vertex[1]
@@ -397,8 +396,14 @@ def main():
             # Part 2.1a
             ###################       
             # Compute a path from start to target_pose
-            prev = dijkstra([0,0])
-            prev = reconstruct_path(prev, (8,1))
+            
+            
+            goal = transform_world_coord_to_map_coord(target_pose[:2])
+            robot_pos = transform_world_coord_to_map_coord([pose_x,pose_y])
+            #print((1,8))
+            robot_pos = [robot_pos[0],robot_pos[1]]
+            prev = dijkstra(robot_pos)
+            prev = reconstruct_path(prev, goal)
             visualize_path(prev)
             display_map(world_map)       
             pass
@@ -428,7 +433,7 @@ def main():
             
             
         #display_map(world_map)
-        print(world_map.shape[0])
+        #print(world_map.shape[0])
     
 if __name__ == "__main__":
     main()
