@@ -224,23 +224,24 @@ def get_travel_cost(source_vertex, dest_vertex):
         return cost
     if world_map[dest_vertex[0]][dest_vertex[1]] == 1:
         cost = 1
-    cost += math.abs(source_vertex[0]-dest_vertex[0]) + math.abs(source_vertex[1]-dest_vertex[1])
+    cost += abs(source_vertex[0]-dest_vertex[0]) + abs(source_vertex[1]-dest_vertex[1])
     return cost
 
 
-def extractMin(Tuple[] x):
-    min_dist = INFINITY
+def extractMin(x):
+    min_dist = float('inf')
     u = x[0]
-    for each vertex, distance in x:
+    for (vertex, distance) in x:
             if distance <= min_dist:
                 u = (vertex,distance)
     return u
-def validVertex(vertex v):
+    
+def validVertex(v):
     global world_map
-    if v[0] >= 0 and v[0] <= world_map.shape[0] and v[1] >= 0 and v[1] <= world_map.shape[1]:
+    if v[0] >= 0 and v[0] < world_map.shape[0] and v[1] >= 0 and v[1] < world_map.shape[1]:
         return True
     return False   
-def getNeighbors(vertex v):
+def getNeighbors(v):
     neighbors = []
     for i in range(0,2):
         for j in range(0,2):
@@ -257,39 +258,41 @@ def dijkstra(source_vertex):
     @param source_vertex: Starting vertex for the search algorithm.
     @return prev: Data structure that maps every vertex to the coordinates of the previous vertex (along the shortest path back to source)
     """
+    ##assumes that vertex is either a int array of [row,col] 
     global world_map
+    
     # TODO: Initialize these variables
-    dist = np.zeros(world_map.shape[0],wolrd_map.shape[1])
-    prev = np.zeros(world_map.shape[0],wolrd_map.shape[1])
-    rows = world_map.shape[0]
-    cols = world_map.shape[1]
-    q_cost = [(source_vertex,0)]
+    rows = int(world_map.shape[0])
+    cols = int(world_map.shape[1])
+    dist = np.zeros([rows,cols]) #nd array of same rows and cols as the world map
+    prev = np.zeros([rows,cols])#nd array of same rows and cols as the world map
+    
+    q_cost = [(source_vertex,0)] #list of tuples (vertex, cost)
     dist[source_vertex[0],source_vertex[1]] = 0
     for i in range (0, rows):
         for j in range(0, cols):
-            v = [i,j]
+            v = [i,j] #assumes that source_vertex is a list [row, col]
             if v != source_vertex:
-                dist[i][j] = INFINITY
+                dist[i][j] = float('inf')
                 prev[i][j] = None
             q_cost.append(([i,j],dist[i][j]))    
    
     while len(q_cost) != 0:
-        u = extractMin(q_cost)
-        neighbors = getNeighbors(u[0])
-        nv = u[0] #new vertex
+        u_tuple = extractMin(q_cost) #returns a tuple (vertex, cost)
+        u = u_tuple[0]
+        neighbors = getNeighbors(u) #returns list of tuples (row, col)
         for v in neighbors:
-            alt = dist[nv[0]][nv[1]] + get_travel_cost(nv,v)
+            print(u,v)
+            alt = dist[u[0]][u[1]] + get_travel_cost(u,v)
             if alt < dist[v[0]][v[1]]:
                 dist[v[0]][v[1]] = alt
-                prev[v[0]][v[1]] = nv
+                prev[v[0]][v[1]] = u
                 count = 0
                 for vertex, distance in q_cost:
                     if vertex == v:
                         q_cost.pop(count)
-                        q_cost.append(v,alt)   
-   
-        #for i in range(         
-    
+                        q_cost.append(v,alt)
+                    count = count + 1            
     
     return dist,prev
 
@@ -305,7 +308,12 @@ def reconstruct_path(prev, goal_vertex):
     """
     
     path = [goal_vertex]
-    
+    while prev[i][j] != None:
+        path.append((prev[i][j][0],prev[i][j][1]))
+        temp_i = i
+        temp_j = j
+        i = prev[temp_i][temp_j][0] 
+        j = prev[temp_i][temp_j][1]
     # Hint: Start at the goal_vertex and work your way backwards using prev until there's no "prev" left to follow.
     #       Then, reverse the list and return it!
     
@@ -346,7 +354,7 @@ def main():
     start_pose = csci3302_lab5_supervisor.supervisor_get_robot_pose()
     pose_x, pose_y, pose_theta = start_pose
 
-    
+    dijkstra([3,4])
     # Main Control Loop:
     while robot.step(SIM_TIMESTEP) != -1:
         # Odometry update code -- do not modify
