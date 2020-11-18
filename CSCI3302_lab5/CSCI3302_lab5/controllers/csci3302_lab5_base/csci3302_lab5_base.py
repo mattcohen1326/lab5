@@ -228,6 +228,26 @@ def get_travel_cost(source_vertex, dest_vertex):
     return cost
 
 
+def extractMin(Tuple[] x):
+    min_dist = INFINITY
+    u = x[0]
+    for each vertex, distance in x:
+            if distance <= min_dist:
+                u = (vertex,distance)
+    return u
+def validVertex(vertex v):
+    global world_map
+    if v[0] >= 0 and v[0] <= world_map.shape[0] and v[1] >= 0 and v[1] <= world_map.shape[1]:
+        return True
+    return False   
+def getNeighbors(vertex v):
+    neighbors = []
+    for i in range(0,2):
+        for j in range(0,2):
+            new_neighbor = (v[0]+i,v[1]+j)
+            if validVertex(new_neighbor):
+                neighbors.append(new_neighbor)
+    return neighbors
 
 ###################
 # Part 1.2
@@ -239,26 +259,39 @@ def dijkstra(source_vertex):
     """
     global world_map
     # TODO: Initialize these variables
-    dist = []
-    prev = None
+    dist = np.zeros(world_map.shape[0],wolrd_map.shape[1])
+    prev = np.zeros(world_map.shape[0],wolrd_map.shape[1])
     rows = world_map.shape[0]
     cols = world_map.shape[1]
-    q_cost = heapq.heapify(dist)
-    q_cost.heappush(source_vertex,0)
-    dist = {source_vertex: 0}
+    q_cost = [(source_vertex,0)]
+    dist[source_vertex[0],source_vertex[1]] = 0
     for i in range (0, rows):
         for j in range(0, cols):
             v = [i,j]
             if v != source_vertex:
-                dist[v] = INFINITY
-                prev[v] = None
-            q_cost.heappush(v, dist[v])        
+                dist[i][j] = INFINITY
+                prev[i][j] = None
+            q_cost.append(([i,j],dist[i][j]))    
+   
     while len(q_cost) != 0:
-        u = q_cost.nsmallest(1)
+        u = extractMin(q_cost)
+        neighbors = getNeighbors(u[0])
+        nv = u[0] #new vertex
+        for v in neighbors:
+            alt = dist[nv[0]][nv[1]] + get_travel_cost(nv,v)
+            if alt < dist[v[0]][v[1]]:
+                dist[v[0]][v[1]] = alt
+                prev[v[0]][v[1]] = nv
+                count = 0
+                for vertex, distance in q_cost:
+                    if vertex == v:
+                        q_cost.pop(count)
+                        q_cost.append(v,alt)   
+   
         #for i in range(         
     
     
-    return prev
+    return dist,prev
 
 
 ###################
@@ -371,6 +404,7 @@ def main():
     
 if __name__ == "__main__":
     main()
+
 
 
 
