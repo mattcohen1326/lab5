@@ -229,18 +229,15 @@ def get_travel_cost(source_vertex, dest_vertex):
 
 
 def extractMin(x):
-    min_dist = float('inf')
-    u = x[0]
-    for (vertex, distance) in x:
-            if distance <= min_dist:
-                u = (vertex,distance)
-    return u
+    x.sort(key=lambda x:x[1],reverse=True)
+    return x.pop()
     
 def validVertex(v):
     global world_map
     if v[0] >= 0 and v[0] < world_map.shape[0] and v[1] >= 0 and v[1] < world_map.shape[1]:
         return True
     return False   
+
 def getNeighbors(v):
     neighbors = []
     for i in range(0,2):
@@ -258,43 +255,40 @@ def dijkstra(source_vertex):
     @param source_vertex: Starting vertex for the search algorithm.
     @return prev: Data structure that maps every vertex to the coordinates of the previous vertex (along the shortest path back to source)
     """
-    ##assumes that vertex is either a int array of [row,col] 
+    print("hm")
     global world_map
     
     # TODO: Initialize these variables
-    rows = int(world_map.shape[0])
-    cols = int(world_map.shape[1])
-    dist = np.zeros([rows,cols]) #nd array of same rows and cols as the world map
-    prev = np.zeros([rows,cols])#nd array of same rows and cols as the world map
-    
-    q_cost = [(source_vertex,0)] #list of tuples (vertex, cost)
+    dist = np.zeros([world_map.shape[0],world_map.shape[1]])
+    prev = {}
+    rows = world_map.shape[0]
+    cols = world_map.shape[1]
+    q_cost = [(source_vertex,0)]
     dist[source_vertex[0],source_vertex[1]] = 0
     for i in range (0, rows):
         for j in range(0, cols):
-            v = [i,j] #assumes that source_vertex is a list [row, col]
+            v = [i,j]
             if v != source_vertex:
                 dist[i][j] = float('inf')
-                prev[i][j] = None
-            q_cost.append(([i,j],dist[i][j]))    
-   
+                prev[(i,j)] = None
+            
+    #print("ok")
     while len(q_cost) != 0:
-        u_tuple = extractMin(q_cost) #returns a tuple (vertex, cost)
+        u_tuple = extractMin(q_cost)
         u = u_tuple[0]
-        neighbors = getNeighbors(u) #returns list of tuples (row, col)
+        neighbors = getNeighbors(u)
+        #print(len(q_cost))
         for v in neighbors:
-            print(u,v)
             alt = dist[u[0]][u[1]] + get_travel_cost(u,v)
-            if alt < dist[v[0]][v[1]]:
+            if alt < dist[v[0]][v[1]]: 
                 dist[v[0]][v[1]] = alt
-                prev[v[0]][v[1]] = u
+                prev[(v[0],v[1])] = u
                 count = 0
-                for vertex, distance in q_cost:
-                    if vertex == v:
-                        q_cost.pop(count)
-                        q_cost.append(v,alt)
-                    count = count + 1            
+                #print("ok2")
+                q_cost.append((v,alt))    
     
-    return dist,prev
+    
+    return prev
 
 
 ###################
@@ -306,17 +300,19 @@ def reconstruct_path(prev, goal_vertex):
     @param goal_vertex: Map coordinates of the goal_vertex
     @return path: List of vertices where path[0] = source_vertex_ij_coords and path[-1] = goal_vertex_ij_coords
     """
-    
+ 
     path = [goal_vertex]
-    while prev[i][j] != None:
-        path.append((prev[i][j][0],prev[i][j][1]))
+    i = goal_vertex[0]
+    j = goal_vertex[1]
+    while (i,j) in prev:
+        path.append(prev[(i,j)])
         temp_i = i
         temp_j = j
-        i = prev[temp_i][temp_j][0] 
-        j = prev[temp_i][temp_j][1]
+        i = prev[(temp_i,temp_j)][0]
+        j = prev[(temp_i,temp_j)][1] 
     # Hint: Start at the goal_vertex and work your way backwards using prev until there's no "prev" left to follow.
     #       Then, reverse the list and return it!
-    
+    path.reverse()
     return path
 
 
@@ -354,7 +350,7 @@ def main():
     start_pose = csci3302_lab5_supervisor.supervisor_get_robot_pose()
     pose_x, pose_y, pose_theta = start_pose
 
-    dijkstra([3,4])
+    #dijkstra([3,5])
     # Main Control Loop:
     while robot.step(SIM_TIMESTEP) != -1:
         # Odometry update code -- do not modify
@@ -380,7 +376,9 @@ def main():
             ###################
             # Part 2.1a
             ###################       
-            # Compute a path from start to target_pose           
+            # Compute a path from start to target_pose
+            prev = dijkstra([3,5])
+            print(reconstruct_path(prev, (6,7)))          
             pass
         elif state == 'get_waypoint':
             ###################
@@ -412,6 +410,7 @@ def main():
     
 if __name__ == "__main__":
     main()
+
 
 
 
