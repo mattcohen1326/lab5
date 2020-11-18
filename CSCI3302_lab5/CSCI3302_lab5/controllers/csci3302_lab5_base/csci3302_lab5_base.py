@@ -246,7 +246,17 @@ def getNeighbors(v):
             if validVertex(new_neighbor):
                 neighbors.append(new_neighbor)
     return neighbors
-
+def getNeighborsNew(v):
+    neighbors = []
+    up = (v[0]+1,v[1])
+    down = (v[0]-1,v[1])
+    left = (v[0],v[1]-1)
+    right = (v[0],v[1]+1)
+    dirs = [up,down,right,left]
+    for move in dirs:
+        if validVertex(move):
+            neighbors.append(move)
+    return neighbors
 ###################
 # Part 1.2
 ###################
@@ -276,7 +286,7 @@ def dijkstra(source_vertex):
     while len(q_cost) != 0:
         u_tuple = extractMin(q_cost)
         u = u_tuple[0]
-        neighbors = getNeighbors(u)
+        neighbors = getNeighborsNew(u)
         #print(len(q_cost))
         for v in neighbors:
             alt = dist[u[0]][u[1]] + get_travel_cost(u,v)
@@ -324,7 +334,17 @@ def visualize_path(path):
     @param path: List of graph vertices along the robot's desired path    
     """
     global world_map
-    
+    count = 0
+    print(path)
+    print(len(path))
+    for key in path:
+        if count == 0:
+            world_map[key[0]][key[1]] = 4
+        elif count == len(path)-1:
+            world_map[key[0]][key[1]] = 3
+        else:
+            world_map[key[0]][key[1]] = 2
+        count = count + 1
     # TODO: Set a value for each vertex along path in the world_map for rendering: 2 = Path, 3 = Goal, 4 = Start
     
     return
@@ -377,8 +397,10 @@ def main():
             # Part 2.1a
             ###################       
             # Compute a path from start to target_pose
-            prev = dijkstra([3,5])
-            print(reconstruct_path(prev, (6,7)))          
+            prev = dijkstra([0,0])
+            prev = reconstruct_path(prev, (8,1))
+            visualize_path(prev)
+            display_map(world_map)       
             pass
         elif state == 'get_waypoint':
             ###################
