@@ -396,22 +396,34 @@ def main():
             # Part 2.1a
             ###################       
             # Compute a path from start to target_pose
-            
-            
             goal = transform_world_coord_to_map_coord(target_pose[:2])
             robot_pos = transform_world_coord_to_map_coord([pose_x,pose_y])
             #print((1,8))
             robot_pos = [robot_pos[0],robot_pos[1]]
             prev = dijkstra(robot_pos)
             prev = reconstruct_path(prev, goal)
-            visualize_path(prev)
-            display_map(world_map)       
+            path_length = len(prev)
+            counter = 1
+            if prev[0] == robot_pos:
+                state = 'get_waypoint'    
             pass
+            
         elif state == 'get_waypoint':
             ###################
             # Part 2.1b
             ###################       
             # Get the next waypoint from the path
+            print(counter, path_length)
+            if counter == path_length:
+                #TODO LAST VERTEX 
+                continue;
+            way_point = prev[counter]
+            target_pose = transform_map_coord_world_coord(way_point)
+            bearing_error = math.atan2( (target_pose[1] - pose_y), (target_pose[0] - pose_x) ) - pose_theta
+            target_wp = [target_pose[0],target_pose[1],bearing_error]
+            #print(bearing_error)
+            counter = counter + 1
+            state = 'move_to_waypoint'
             pass
         elif state == 'move_to_waypoint':
             ###################
@@ -422,13 +434,20 @@ def main():
             # Syntax/Hint for using the IK Controller:
             # lspeed, rspeed = get_wheel_speeds(target_wp)
             # leftMotor.setVelocity(lspeed)
-            # rightMotor.setVelocity(rspeed)    
+            # rightMotor.setVelocity(rspeed)
+            
+            lspeed, rspeed = get_wheel_speeds(target_wp)
+            leftMotor.setVelocity(lspeed)
+            rightMotor.setVelocity(rspeed)
+            distance_error = np.linalg.norm(target_wp[:2] - np.array([pose_x,pose_y]))
+            heading_error = target_wp[2] -  pose_theta
+            #print(distance_error,heading_error)
+            if distance_error < .04 and heading_error > -.04 and heading_error < 0.04:
+                print("hmmm")
+                state = 'get_waypoint'  
             pass
         else:
-            # Stop
-            left_wheel_direction, right_wheel_direction = 0, 0
-            leftMotor.setVelocity(0)
-            rightMotor.setVelocity(0)    
+            # Stop   
             pass
             
             
