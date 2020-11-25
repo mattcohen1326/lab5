@@ -403,6 +403,8 @@ def main():
             prev = dijkstra(robot_pos)
             prev = reconstruct_path(prev, goal)
             path_length = len(prev)
+            visualize_path(prev)
+            display_map(world_map)
             counter = 1
             if prev[0] == robot_pos:
                 state = 'get_waypoint'    
@@ -413,14 +415,20 @@ def main():
             # Part 2.1b
             ###################       
             # Get the next waypoint from the path
-            print(counter, path_length)
+            #print(counter, path_length)
             if counter == path_length:
                 #TODO LAST VERTEX 
+                #print("hmm")
                 continue;
             way_point = prev[counter]
-            target_pose = transform_map_coord_world_coord(way_point)
-            bearing_error = math.atan2( (target_pose[1] - pose_y), (target_pose[0] - pose_x) ) - pose_theta
-            target_wp = [target_pose[0],target_pose[1],bearing_error]
+            print(way_point)
+            goal_pose = transform_map_coord_world_coord(way_point)
+            if counter == path_length-1:
+                bearing_error = target_pose[2]
+            else:
+                next_wp = transform_map_coord_world_coord(prev[counter+1])
+                bearing_error = math.atan2((next_wp[1] - goal_pose[1]), (next_wp[0] - goal_pose[0]) )
+            target_wp = [goal_pose[0],goal_pose[1],bearing_error]
             #print(bearing_error)
             counter = counter + 1
             state = 'move_to_waypoint'
@@ -435,16 +443,15 @@ def main():
             # lspeed, rspeed = get_wheel_speeds(target_wp)
             # leftMotor.setVelocity(lspeed)
             # rightMotor.setVelocity(rspeed)
-            
             lspeed, rspeed = get_wheel_speeds(target_wp)
+            if lspeed == 0 and rspeed == 0:
+                state = 'get_waypoint'
+           
             leftMotor.setVelocity(lspeed)
             rightMotor.setVelocity(rspeed)
-            distance_error = np.linalg.norm(target_wp[:2] - np.array([pose_x,pose_y]))
-            heading_error = target_wp[2] -  pose_theta
+            
             #print(distance_error,heading_error)
-            if distance_error < .04 and heading_error > -.04 and heading_error < 0.04:
-                print("hmmm")
-                state = 'get_waypoint'  
+            
             pass
         else:
             # Stop   
